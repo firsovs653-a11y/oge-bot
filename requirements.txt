@@ -1,1 +1,3 @@
-pytelegrambotapi==4.16.0
+echo "pytelegrambotapi==4.16.0" > requirements.txt
+echo "python-dotenv==1.0.0" >> requirements.txt
+echo "flask==2.3.3" >> requirements.txt
