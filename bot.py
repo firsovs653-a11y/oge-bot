@@ -255,4 +255,4 @@ print("=" * 50)
 print("✅ Бот запущен и готов к работе!")
 print("=" * 50)
 
-bot.infinity_polling()
+bot.infinity_polling(timeout=60, long_polling_timeout=60)
