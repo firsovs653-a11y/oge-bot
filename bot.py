@@ -4,20 +4,22 @@ import os
 import subprocess
 import tempfile
 from dotenv import load_dotenv
-from flask import Flask, request
-import threading
-import time
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
+# 1. Загружаем переменные окружения
 load_dotenv()
 
+# 2. Получаем токен
 TOKEN = os.environ.get('TELEGRAM_TOKEN')
 
 if not TOKEN:
     print("❌ Ошибка: TELEGRAM_TOKEN не задан!")
     exit(1)
 
+# 3. СОЗДАЕМ ОБЪЕКТ БОТА (ВАЖНО: ДО ОБРАБОТЧИКОВ!)
 bot = telebot.TeleBot(TOKEN)
 
+# 4. Загружаем задания
 user_current_task = {}
 
 
@@ -34,6 +36,7 @@ def load_tasks():
 TASKS = load_tasks()
 
 
+# 5. Функция запуска кода
 def run_python_code(code, input_data):
     try:
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as f:
@@ -62,6 +65,8 @@ def run_python_code(code, input_data):
         return None, f"❌ Ошибка: {str(e)}"
 
 
+# 6. ОБРАБОТЧИКИ КОМАНД (после создания bot)
+
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.send_message(
@@ -69,7 +74,28 @@ def start(message):
         "👋 Привет! Я бот для подготовки к ОГЭ по информатике.\n\n"
         "/tasks — список заданий\n"
         "/task <номер> — взять задание\n"
+        "/app — открыть Mini App\n"
         "/help — помощь"
+    )
+
+
+@bot.message_handler(commands=['app'])
+def mini_app(message):
+    keyboard = InlineKeyboardMarkup()
+
+    # Ссылка на твой Mini App (замени на реальную после деплоя)
+    web_app = WebAppInfo(url="https://oge-miniapp.up.railway.app")
+
+    button = InlineKeyboardButton(
+        text="🚀 Открыть Mini App",
+        web_app=web_app
+    )
+    keyboard.add(button)
+
+    bot.send_message(
+        message.chat.id,
+        "📱 Нажми на кнопку, чтобы открыть приложение с заданиями:",
+        reply_markup=keyboard
     )
 
 
@@ -80,7 +106,8 @@ def help_command(message):
         "1️⃣ Выбери задание: /tasks\n"
         "2️⃣ Возьми задание: /task 1\n"
         "3️⃣ Напиши код и отправь мне\n"
-        "4️⃣ Получи проверку!"
+        "4️⃣ Получи проверку!\n\n"
+        "📱 Или открой Mini App: /app"
     )
 
 
@@ -93,6 +120,7 @@ def list_tasks(message):
     tasks_list = "📚 ДОСТУПНЫЕ ЗАДАНИЯ\n\n"
     for num, task in TASKS.items():
         tasks_list += f"{num}. {task.get('title', 'Без названия')}\n"
+    tasks_list += "\nЧтобы взять задание: /task <номер>"
     bot.send_message(message.chat.id, tasks_list)
 
 
@@ -163,33 +191,6 @@ def handle_code(message):
     bot.edit_message_text(response, user_id, status_msg.message_id)
 
 
-# ========== ДЛЯ RENDER WEB SERVICE ==========
-app = Flask(__name__)
-
-
-@app.route('/')
-def index():
-    return "🤖 Бот для подготовки к ОГЭ по информатике работает!"
-
-
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
-    bot.process_new_updates([update])
-    return 'ok', 200
-
-
-def run_flask():
-    app.run(host='0.0.0.0', port=10000)
-
-
-# Запускаем Flask в отдельном потоке
-threading.Thread(target=run_flask).start()
-
-# Удаляем старый webhook и устанавливаем новый
-time.sleep(2)
-bot.remove_webhook()
-time.sleep(1)
-bot.set_webhook(url='https://oge-bot.onrender.com/webhook')
-
-print("🤖 Бот запущен на Render Web Service!")
+# 7. ЗАПУСК БОТА
+print("🤖 Бот запущен!")
+bot.infinity_polling()
