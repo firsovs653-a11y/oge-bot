@@ -64,7 +64,7 @@ def run_python_code(code, input_data):
 def start(message):
     # Временно для локального тестирования
     # Потом замени на реальный URL от Railway
-    webapp_url = "https://web-production-0e929.up.railway.app"  # Локальный Mini App
+    webapp_url = "oge-miniapp-production.up.railway.app"  # Локальный Mini App
 
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton(
