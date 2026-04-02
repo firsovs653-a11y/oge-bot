@@ -1,2 +1,2 @@
 pytelegrambotapi==4.16.0
-python-dotenv==1.0.0flask==2.3.3
+python-dotenv==1.0.0
